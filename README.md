@@ -1,57 +1,55 @@
 
 # Deepfake Detection System 🔍
 
-A **modern, production-ready** deepfake detection system using **EfficientViT + Transformer** architecture.  
-Upload a video, and get instant, accurate predictions with explainable visualizations.
+A **lightweight, efficient** deepfake detection system using **EfficientNet-B0** architecture.  
+Upload images or videos and get instant, accurate predictions with confidence scores.
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-ee4c2c.svg)](https://pytorch.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.31+-FF4B4B.svg)](https://streamlit.io/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.7+-ee4c2c.svg)](https://pytorch.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.53+-FF4B4B.svg)](https://streamlit.io/)
 
 ## 🌟 Features
 
-- 🎞️ **Video Analysis:** Supports MP4, AVI, MOV, MKV formats with real-time processing
-- 🧠 **State-of-the-Art Model:** EfficientViT-B3 backbone + Transformer temporal modeling
-- 🎯 **High Accuracy:** 96-97% accuracy on standard datasets
-- ⚡ **Fast Inference:** 15-20 FPS on RTX 3080 GPU
-- 📊 **Rich Visualizations:** Confidence scores, temporal analysis, attention maps
-- 🌙 **Modern UI:** Sleek dark interface with interactive charts
-- 🔒 **Production Ready:** Comprehensive logging, error handling, and validation
+- 📸 **Image & Video Analysis:** Supports JPG, PNG images and MP4, AVI, MOV videos
+- 🧠 **Efficient Architecture:** EfficientNet-B0 - lightweight yet powerful
+- 🎯 **High Accuracy:** 94% test accuracy, 95% validation accuracy
+- ⚡ **Fast Inference:** Optimized for GTX 1650 4GB GPU
+- 📊 **Interactive UI:** Beautiful Streamlit interface with confidence scores
+- 💻 **CLI Tool:** Batch processing capability via command line
+- 🔧 **Memory Optimized:** Runs smoothly on consumer-grade hardware
 
 ## 🏗️ Architecture
 
-### Model: EfficientViT + Transformer
+### Model: EfficientNet-B0
 
 ```
-Input Video (H×W×3)
+Input Image (224×224×3)
     ↓
-[Frame Extraction]
+[EfficientNet-B0 Backbone]
+    ↓ (Pretrained on ImageNet)
+[Feature Extraction] (1280 features)
     ↓
-EfficientViT-B3 Backbone (Vision Transformer)
-    ↓ (512-dim features per frame)
-[Temporal Transformer Encoder]
-    ↓ (4 layers, 8 heads)
-[Multi-Head Attention] (Explainability)
+[Dropout 0.2]
     ↓
-[Classification Head]
+[Fully Connected Layer]
     ↓
-Prediction: Real vs Deepfake (with confidence)
+Output: Real (1) vs Fake (0)
 ```
 
 **Key Components:**
-- **Vision Backbone:** EfficientViT-B3 (efficient vision transformer)
-- **Temporal Modeling:** 4-layer Transformer encoder
-- **Attention Mechanism:** 8-head multi-head attention for explainability
-- **Parameters:** ~25M trainable parameters
-- **Model Size:** ~100MB
+- **Backbone:** EfficientNet-B0 (pretrained on ImageNet)
+- **Input Size:** 224×224 RGB images
+- **Parameters:** 4,010,110 (4M)
+- **Model Size:** 15.3 MB
+- **Training:** 30 epochs on 16,433 images
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.11 or higher
 - CUDA-capable GPU (recommended) or CPU
-- 8GB+ RAM
+- 4GB+ GPU VRAM (for training)
 
 ### Installation
 
@@ -65,8 +63,11 @@ cd Deepfake-Detector
 2. **Create virtual environment**
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv venv311
+# On Windows:
+.\venv311\Scripts\Activate.ps1
+# On Linux/Mac:
+source venv311/bin/activate
 ```
 
 3. **Install dependencies**
@@ -75,122 +76,167 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+4. **Download the trained model**
+
+Place your trained `best_model.pth` (15.3 MB) in the `models/` folder, or train your own using `train_deepfake_optimized.ipynb`.
+
 ### Running the Application
 
+**Web Interface (Streamlit):**
 ```bash
-streamlit run app.py
+streamlit run app_simple.py
 ```
 
-The app will launch at [http://localhost:8501](http://localhost:8501)
+**Command Line Interface:**
+```bash
+# Single image
+python inference_simple.py --image path/to/image.jpg
 
-**First-time users:** The model will automatically download pretrained EfficientViT-B3 weights (~100MB) on first run. This may take a few minutes depending on your internet connection.
+# Video analysis
+python inference_simple.py --video path/to/video.mp4
+
+# Batch processing
+python inference_simple.py --batch path/to/folder
+```
+
+The web app will launch at [http://localhost:8501](http://localhost:8501)
 
 ## 📖 Usage
 
-### Basic Usage
+### Web Interface (Streamlit)
 
-1. **Upload Video:** Click "Upload Video" and select your file
-2. **Model Ready:** The app uses pretrained EfficientViT-B3 backbone automatically (no model upload needed!)
-3. **Configure Settings:** Adjust frame extraction rate and confidence threshold in the sidebar
-4. **Analyze:** The system will automatically process your video with the pretrained model
-5. **View Results:** See confidence visualizations, frame-by-frame analysis, and attention maps
+1. **Launch the app:** `streamlit run app_simple.py`
+2. **Upload Image/Video:** Use the file uploader in the "Image Detection" or "Video Detection" tab
+3. **View Results:** Get instant predictions with confidence scores
+4. **Statistics:** Check the "Statistics" tab for model performance metrics
 
-**Note:** For advanced users, you can optionally load custom trained weights through the "Advanced: Load Custom Weights" expander in the sidebar.
+### Command Line Interface
 
-### Advanced Configuration
+```bash
+# Analyze a single image
+python inference_simple.py --image test.jpg
 
-Edit `config.py` to customize:
+# Analyze a video (process every 5th frame)
+python inference_simple.py --video test.mp4 --frame-skip 5
 
-```python
-MODEL_CONFIG.num_frames = 16      # Frames per sequence
-MODEL_CONFIG.embed_dim = 512      # Embedding dimension
-INFERENCE_CONFIG.batch_size = 8   # Batch size for inference
+# Batch process a folder
+python inference_simple.py --batch data/test/fake --frame-skip 10
 ```
+
+**CLI Options:**
+- `--model`: Path to model file (default: `models/best_model.pth`)
+- `--frame-skip`: Process every Nth frame in videos (default: 5)
+- `--batch`: Process all images/videos in a directory
 
 ## 📂 Project Structure
 
 ```
 Deepfake-Detector/
-├── app.py                      # Streamlit web application
-├── config.py                   # Configuration management
+├── app_simple.py               # Streamlit web application
+├── inference_simple.py         # CLI inference tool
+├── train_deepfake_optimized.ipynb  # Training notebook
 ├── requirements.txt            # Python dependencies
+├── README.md                   # This file
+├── QUICKSTART.md              # Quick start guide
 │
-├── utils/
-│   ├── __init__.py
-│   ├── model_utils.py         # EfficientViT model & inference
-│   ├── video_processing.py    # Video I/O and preprocessing
-│   └── logger.py              # Centralized logging
+├── .streamlit/
+│   └── config.toml            # Streamlit configuration
 │
-├── tests/
-│   ├── __init__.py
-│   ├── test_model.py          # Model architecture tests
-│   └── test_video_processing.py  # Video processing tests
-│
-├── scripts/
-│   ├── train.py               # Training script
-│   └── evaluate.py            # Evaluation script
+├── .devcontainer/             # VS Code dev container config
+├── .github/                   # GitHub Actions workflows
 │
 ├── assets/                    # UI assets and samples
-├── logs/                      # Application logs
-├── models/                    # Saved model checkpoints
-└── README.md
+├── models/                    # Saved model (best_model.pth)
+│   └── best_model.pth        # Trained EfficientNet-B0 (15.3 MB)
+│
+└── data/                      # Dataset (not in git)
+    └── 1000_videos/
+        ├── train/
+        ├── validation/
+        └── test/
 ```
 
 ## 🎓 Training Your Own Model
 
-### Prepare Dataset
+### Dataset Preparation
 
-Organize your dataset:
+Organize your dataset in this structure:
 
 ```
-data/
+data/1000_videos/
 ├── train/
-│   ├── real/
-│   └── fake/
-└── val/
-    ├── real/
-    └── fake/
+│   ├── fake/    # Fake/manipulated images
+│   └── real/    # Real/authentic images
+├── validation/
+│   ├── fake/
+│   └── real/
+└── test/
+    ├── fake/
+    └── real/
 ```
 
-### Train
+### Training
+
+Open and run `train_deepfake_optimized.ipynb` in Jupyter:
 
 ```bash
-python scripts/train.py \
-    --data-dir ./data \
-    --batch-size 8 \
-    --epochs 50 \
-    --lr 1e-4 \
-    --output-dir ./models
+jupyter notebook train_deepfake_optimized.ipynb
 ```
 
-### Evaluate
+**Training Configuration:**
+- **Epochs:** 30
+- **Batch Size:** 16 (optimized for 4GB GPU)
+- **Learning Rate:** 0.0001
+- **Optimizer:** Adam
+- **Image Size:** 224×224
+- **Augmentation:** Random flip, rotation, color jitter
 
-```bash
-python scripts/evaluate.py \
-    --model-path ./models/best_model.pth \
-    --data-dir ./data/test
-```
+**Hardware Requirements:**
+- **GPU:** NVIDIA GTX 1650 4GB or better
+- **Training Time:** ~4 hours on GTX 1650
 
-## 🧪 Testing
+The notebook will:
+1. Load and preprocess the dataset
+2. Train the EfficientNet-B0 model
+3. Save the best model to `models/best_model.pth`
+4. Generate training curves to `models/training_history.png`
+5. Evaluate on test set
 
-Run the test suite:
+### Expected Results
 
-```bash
-# Run all tests
-python -m pytest tests/
-
-# Run specific test module
-python -m pytest tests/test_model.py -v
-
-# Run with coverage
-python -m pytest tests/ --cov=utils --cov-report=html
-```
+After training, you should achieve:
+- **Training Accuracy:** ~99%
+- **Validation Accuracy:** ~95%
+- **Test Accuracy:** ~94%
 
 ## 📊 Performance Benchmarks
 
-### Accuracy
+### Model Performance
 
-| Dataset | Accuracy | Precision | Recall | F1 Score |
+| Metric | Value |
+|--------|-------|
+| **Test Accuracy** | 94.00% |
+| **Validation Accuracy** | 95.04% |
+| **Training Accuracy** | 99.24% |
+| **Model Size** | 15.3 MB |
+| **Parameters** | 4,010,110 |
+| **Training Time** | 4h 11m (GTX 1650) |
+
+### Dataset Statistics
+
+| Split | Images | Fake | Real |
+|-------|--------|------|------|
+| **Training** | 11,633 | ~50% | ~50% |
+| **Validation** | 2,400 | ~50% | ~50% |
+| **Test** | 2,400 | ~50% | ~50% |
+| **Total** | 16,433 | - | - |
+
+### Inference Speed
+
+| Hardware | Images/sec | Video FPS |
+|----------|------------|-----------|
+| **GTX 1650 (4GB)** | ~50-100 | 30-60 fps |
+| **CPU (Intel i5)** | ~5-10 | 5-10 fps |
 |---------|----------|-----------|--------|----------|
 | FaceForensics++ | 96.8% | 95.2% | 97.1% | 96.1% |
 | Celeb-DF | 94.3% | 92.8% | 94.9% | 93.8% |
@@ -201,73 +247,73 @@ python -m pytest tests/ --cov=utils --cov-report=html
 | Hardware | FPS | Batch Size |
 |----------|-----|------------|
 | RTX 3080 | 18.5 | 8 |
-| RTX 2060 | 12.3 | 4 |
-| CPU (i7) | 2.1 | 1 |
+## 🛠️ Technical Details
 
-### Model Comparison
-
-| Architecture | Parameters | Accuracy | Speed (FPS) |
-|--------------|------------|----------|-------------|
-| **EfficientViT + Transformer** | 25M | **96.8%** | **18.5** |
-| ResNet50 + LSTM | 45M | 92.3% | 12.1 |
-| XceptionNet | 23M | 94.1% | 15.3 |
-
-## 🔧 Configuration
-
-### Model Configuration
+### Model Architecture
 
 ```python
-from config import MODEL_CONFIG
-
-MODEL_CONFIG.num_classes = 2        # Binary classification
-MODEL_CONFIG.num_frames = 16        # Frames per sequence
-MODEL_CONFIG.embed_dim = 512        # Feature dimension
-MODEL_CONFIG.num_heads = 8          # Attention heads
-MODEL_CONFIG.num_layers = 4         # Transformer layers
-MODEL_CONFIG.dropout = 0.1          # Dropout rate
+class LightweightDeepfakeDetector(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # EfficientNet-B0 backbone (pretrained on ImageNet)
+        self.backbone = efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
+        
+        # Binary classification head
+        self.backbone.classifier = nn.Sequential(
+            nn.Dropout(p=0.2, inplace=True),
+            nn.Linear(1280, 2)  # 2 classes: fake (0) and real (1)
+        )
 ```
 
-### Application Configuration
+### Training Details
 
-```python
-from config import APP_CONFIG
-
-APP_CONFIG.max_video_size_mb = 100  # Max upload size
-APP_CONFIG.frame_extraction_step = 1  # Extract every nth frame
-```
+- **Loss Function:** CrossEntropyLoss
+- **Optimizer:** Adam (lr=0.0001)
+- **LR Scheduler:** ReduceLROnPlateau (patience=3, factor=0.5)
+- **Data Augmentation:**
+  - Random horizontal flip (p=0.5)
+  - Random rotation (±10°)
+  - Color jitter (brightness, contrast, saturation ±20%)
+- **Normalization:** ImageNet mean/std
 
 ## 🐛 Troubleshooting
 
 ### CUDA Out of Memory
 
-```python
-# Reduce batch size in config.py
-INFERENCE_CONFIG.batch_size = 4
-```
+If training fails with OOM errors:
+- Reduce batch size in notebook: `BATCH_SIZE = 8`
+- Use `--frame-skip` for videos: `python inference_simple.py --video test.mp4 --frame-skip 10`
 
-### Model Loading Error
+### Model Not Found
 
 ```bash
-# Ensure PyTorch version compatibility
-pip install torch==2.1.0 torchvision==0.16.0
+# Make sure model exists
+ls models/best_model.pth
+
+# Or download from releases
+# https://github.com/Saisriram53/Deepfake-Detector/releases
 ```
 
-### Video Processing Error
+### Dependencies Issues
 
-```python
-# Install system dependencies
-apt-get install libsm6 libxext6 libxrender-dev
+```bash
+# Reinstall dependencies
+pip install --upgrade -r requirements.txt
+
+# Check versions
+python -c "import torch; print(torch.__version__)"
+python -c "import streamlit; print(streamlit.__version__)"
 ```
 
 ## 📝 Citation
 
-If you use this code in your research, please cite:
+If you use this code in your research or project, please cite:
 
 ```bibtex
-@misc{deepfake-detector-2024,
-  title={EfficientViT-based Deepfake Detection System},
+@misc{deepfake-detector-2026,
+  title={Lightweight EfficientNet-B0 Deepfake Detection System},
   author={Saisriram53},
-  year={2024},
+  year={2026},
   publisher={GitHub},
   url={https://github.com/Saisriram53/Deepfake-Detector}
 }
@@ -285,17 +331,28 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- [EfficientViT](https://github.com/mit-han-lab/efficientvit) - Efficient Vision Transformer architecture
-- [timm](https://github.com/rwightman/pytorch-image-models) - PyTorch Image Models
+- [EfficientNet](https://arxiv.org/abs/1905.11946) - Efficient Convolutional Neural Networks
+- [PyTorch](https://pytorch.org/) - Deep learning framework
 - [Streamlit](https://streamlit.io/) - Web application framework
+- Dataset: 1000 Deepfake Videos Dataset
 
 ## 📧 Contact
 
-For questions or support, please open an issue on GitHub.
+**GitHub:** [@Saisriram53](https://github.com/Saisriram53)  
+**Repository:** [Deepfake-Detector](https://github.com/Saisriram53/Deepfake-Detector)
+
+For questions or issues, please open an issue on GitHub.
+
+---
+
+<div align="center">
+  <p>⭐ Star this repo if you find it helpful!</p>
+  <p>Made with ❤️ for accurate deepfake detection</p>
+</div>
 
 ---
 
